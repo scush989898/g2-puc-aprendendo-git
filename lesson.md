@@ -1,0 +1,1 @@
+parsear para md com chatgpt
