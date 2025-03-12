@@ -7,3 +7,13 @@ comandos:
         exemplo 2 : 'git add comandos.txt'  ** sobe um unico arquivo especificado
         exemplo 3 : 'git add pasta/teste.py' ** sobe um unico arquivo, dentro de uma pasta especificada
     'git commit -m <mensagem a ser escrita>'
+    'git push'
+    'git push'
+    'git push'
+
+    comandos mais usados
+
+    git status
+    git add 
+    git commit
+    git push
