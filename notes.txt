@@ -10,5 +10,7 @@ ESPAÇO TESTE Aula github
     5 - GitIgnore
     6 - O pensamento computacional envolve o uso de conceitos da ciência da computação para resolver problemas, projetar sistemas e entender comportamentos. 
 
+    Fazendo junto pra aprender.
     7 - Principais comandos
+    
 
