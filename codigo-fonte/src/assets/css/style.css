@@ -1,34 +1,159 @@
-/* General styles */
-body {
-    background-color: #f8f9fa;
+/* style.css */
+
+/* Importando a fonte Inconsolata do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;600;700&display=swap');
+
+/* Variáveis de cores */
+:root {
+    --primary-color: #FF7F3E;
+    /* Cor principal */
+    --secondary-color: #4335A7;
+    /* Cor secundária */
+    --light-color: #FFF6E9;
+    /* Cor secundária clara */
+    --accent-color: #80C4E9;
+    /* Cor secundária de destaque */
+    --dark-text: #333333;
+    /* Para textos escuros */
+    --light-text: #FFFFFF;
+    /* Para textos claros */
 }
 
-/* Task item styles */
+/* Estilos gerais */
+body {
+    font-family: 'Inconsolata', monospace;
+    background-color: var(--light-color);
+    color: var(--dark-text);
+}
+
+/* Estilos de navbar */
+.navbar {
+    background-color: var(--light-color) !important;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-color) !important;
+}
+
+.nav-link {
+    color: var(--secondary-color) !important;
+    font-weight: 500;
+}
+
+.nav-link.active {
+    color: var(--primary-color) !important;
+    font-weight: 700;
+}
+
+/* Estilos de botões */
+.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--light-text) !important;
+}
+
+.btn-primary:hover {
+    background-color: #e67036 !important;
+    /* Versão um pouco mais escura para hover */
+    border-color: #e67036 !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color) !important;
+    color: var(--light-text) !important;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+}
+
+.btn-secondary:hover {
+    background-color: #392d8f !important;
+    /* Versão um pouco mais escura para hover */
+    border-color: #392d8f !important;
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--secondary-color) !important;
+    color: var(--light-text) !important;
+}
+
+/* Estilos de cards */
+.card {
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--accent-color);
+    color: var(--light-text);
+    font-weight: 600;
+}
+
+.badge {
+    font-family: 'Inconsolata', monospace;
+}
+
+.notification-badge {
+    background-color: var(--primary-color) !important;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+}
+
+/* Estilos de tarefas */
 .task-item {
     cursor: pointer;
     transition: all 0.2s ease;
+    border-left: 4px solid var(--primary-color);
 }
 
 .task-item:hover {
-    background-color: #f8f9fa;
+    background-color: rgba(255, 127, 62, 0.1);
 }
 
 .task-completed {
     opacity: 0.7;
     text-decoration: line-through;
+    border-left-color: var(--accent-color);
 }
 
 .task-inactive {
     opacity: 0.5;
     border-style: dashed !important;
+    border-left-color: var(--secondary-color);
 }
 
-/* Notification badge */
-.notification-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    transform: translate(25%, -25%);
+/* Forms */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(255, 127, 62, 0.25);
+}
+
+/* Links */
+a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
 }
 
 /* Mobile optimizations */

@@ -54,6 +54,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            if (!dueDate) {
+                alert('Due Date is required');
+                return;
+            }
+
             // FIXED: Store date in ISO 8601 format (YYYY-MM-DD)
             // HTML input type="date" returns YYYY-MM-DD which is already in a universal format
             let adjustedDueDate = null;
@@ -111,6 +116,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!title) {
                 alert('Task title is required');
+                return;
+            }
+
+            if (!dueDate) {
+                alert('Due Date is required');
                 return;
             }
 

@@ -1,0 +1,117 @@
+/* register.css */
+
+body {
+    background-color: var(--light-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    max-width: 450px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.card-header {
+    background-color: var(--accent-color);
+    padding: 20px;
+    border-bottom: none;
+}
+
+.card-header h3 {
+    color: var(--light-text);
+    font-weight: 700;
+    margin: 0;
+}
+
+.card-body {
+    background-color: var(--light-color);
+    padding: 30px;
+}
+
+.form-label {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(255, 127, 62, 0.25);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #e67036;
+    border-color: #e67036;
+}
+
+a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Password strength indicator */
+.password-strength {
+    height: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.strength-weak {
+    background-color: #ff4d4d;
+    width: 33%;
+}
+
+.strength-medium {
+    background-color: #ffbb33;
+    width: 66%;
+}
+
+.strength-strong {
+    background-color: #00cc66;
+    width: 100%;
+}
+
+.password-hint {
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 5px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 576px) {
+    .card {
+        margin: 15px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+}

@@ -1,0 +1,175 @@
+/* tasks.css */
+
+/* Navegação de datas */
+.date-navigation-container {
+    background-color: var(--light-color);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--accent-color);
+}
+
+.date-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.date-nav-btn {
+    color: var(--secondary-color);
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.date-nav-btn:hover {
+    color: var(--primary-color);
+}
+
+.current-date {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+/* Cards de dia */
+.day-card {
+    background-color: var(--light-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.day-header {
+    padding: 10px;
+    background-color: var(--accent-color);
+    color: var(--light-text);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.day-empty {
+    text-align: center;
+    padding: 20px;
+    color: #777;
+    font-style: italic;
+}
+
+/* Task items */
+.task-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background-color: white;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.2s ease;
+}
+
+.task-item:hover {
+    background-color: rgba(255, 127, 62, 0.1);
+    transform: translateY(-2px);
+}
+
+.task-item .task-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--secondary-color);
+}
+
+.task-item .task-description {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.task-item .task-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.task-category-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Status styles */
+.task-completed {
+    opacity: 0.7;
+    text-decoration: line-through;
+    border-left-color: var(--accent-color);
+}
+
+.task-inactive {
+    opacity: 0.5;
+    border-style: dashed !important;
+    border-left-color: var(--secondary-color);
+}
+
+/* Visualizações */
+.toggle-view-btn {
+    color: var(--secondary-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-view-btn:hover {
+    color: var(--primary-color);
+}
+
+/* Vertical view */
+#verticalView .task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#verticalView .task-content {
+    flex: 1;
+}
+
+#verticalView .task-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.task-date-header {
+    color: var(--secondary-color);
+    font-weight: 700;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 5px;
+    margin: 15px 0;
+}
+
+/* Mobile overrides */
+@media (max-width: 767.98px) {
+    .day-card {
+        margin-bottom: 15px;
+    }
+
+    .task-item {
+        padding: 10px;
+    }
+
+    .day-header {
+        font-size: 1rem;
+    }
+
+    .task-container {
+        margin-bottom: 70px;
+        /* Space for bottom navigation on mobile */
+    }
+
+    .date-navigation .current-date {
+        font-size: 1rem;
+    }
+}
