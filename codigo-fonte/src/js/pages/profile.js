@@ -1,3 +1,5 @@
+// profile.js
+
 document.addEventListener('DOMContentLoaded', function () {
     const currentUser = Storage.getCurrentUser();
     if (!currentUser) {
@@ -9,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('profileName').value = currentUser.name;
     document.getElementById('profileEmail').value = currentUser.email;
 
+    // Convert ISO date to local date format ONLY for display
     const createdDate = new Date(currentUser.createdAt);
     document.getElementById('createdAt').value = createdDate.toLocaleDateString();
 
@@ -44,16 +47,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (badge) {
         const tasks = Storage.getUserTasks(currentUser.id);
 
-        // Count overdue tasks
+        // Get today's date in UTC
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // Count overdue tasks
         const overdueTasks = tasks.filter(task => {
             if (task.status === 'completed' || !task.dueDate) return false;
 
-            const dueDate = new Date(task.dueDate);
-            dueDate.setHours(0, 0, 0, 0);
-
+            // Parse the ISO date string directly
+            const dueDate = new Date(task.dueDate + 'T12:00:00Z');
             return dueDate < today;
         });
 

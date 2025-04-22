@@ -1,3 +1,5 @@
+// auth.js
+
 document.addEventListener('DOMContentLoaded', function () {
     // Check if auth is required and user is not logged in
     if (window.location.pathname.indexOf('/pages/') > -1 &&
@@ -37,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 name,
                 email,
                 password, // In a real app, this should be hashed
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString() // Already using ISO format, which is universal
             };
 
             users.push(newUser);
@@ -86,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
             Storage.clearCurrentUser();
-            window.location.href = '../../../index.html';
+            window.location.href = '../../index.html';
         });
     }
 });

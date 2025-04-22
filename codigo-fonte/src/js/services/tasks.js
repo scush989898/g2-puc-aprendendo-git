@@ -1,3 +1,5 @@
+// tasks.js
+
 document.addEventListener('DOMContentLoaded', function () {
     // Get current user
     const currentUser = Storage.getCurrentUser();
@@ -14,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleViewBtn = document.getElementById('toggleViewBtn');
     const statusFilter = document.getElementById('statusFilter');
     const categoryFilter = document.getElementById('categoryFilter');
+
+    // Date navigation variables
+    let currentDateOffset = 0;
 
     // Task repeat checkbox handler
     const taskRepeatCheckbox = document.getElementById('taskRepeat');
@@ -49,12 +54,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // FIXED: Store date in ISO 8601 format (YYYY-MM-DD)
+            // HTML input type="date" returns YYYY-MM-DD which is already in a universal format
+            let adjustedDueDate = null;
+            if (dueDate) {
+                // Store the date in ISO format without time component for consistency
+                adjustedDueDate = dueDate; // already in YYYY-MM-DD format
+            }
+
             const newTask = {
                 id: Storage.generateId(),
                 title,
                 description,
                 categoryId,
-                dueDate: dueDate || null,
+                dueDate: adjustedDueDate,
                 notes,
                 status: 'active',
                 repeat: {
@@ -110,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     title,
                     description,
                     categoryId,
-                    dueDate: dueDate || null,
+                    dueDate: dueDate || null, // dueDate is already in YYYY-MM-DD format
                     notes,
                     status,
                     repeat: {
@@ -157,16 +170,146 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Toggle view button handler
+    // Update date display based on current offset
+    function updateDateDisplay() {
+        // Get UTC base date (today)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Apply the offset to base date
+        const baseDate = new Date(today);
+        baseDate.setDate(baseDate.getDate() + currentDateOffset);
+
+        // Update date display - convert to local format ONLY for display
+        const dateDisplay = document.getElementById('currentDateDisplay');
+        if (dateDisplay) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateDisplay.textContent = `Current View: ${baseDate.toLocaleDateString('en-US', options)}`;
+        }
+    }
+
+    // Modified toggle view button handler
     if (toggleViewBtn) {
         toggleViewBtn.addEventListener('click', function () {
             horizontalView.classList.toggle('d-none');
             verticalView.classList.toggle('d-none');
 
+            // Update date display when toggling views
+            updateDateDisplay();
+
+            // When switching views, we need to reload tasks to ensure date consistency
+            loadTasks();
+
             // Update local storage preference
             localStorage.setItem('taskViewPreference',
                 horizontalView.classList.contains('d-none') ? 'vertical' : 'horizontal');
         });
+    }
+
+    // Create date navigation controls
+    function createDateNavigation() {
+        // Check if controls already exist
+        if (document.getElementById('dateNavigationControls')) {
+            return;
+        }
+
+        const navigationControls = document.createElement('div');
+        navigationControls.id = 'dateNavigationControls';
+        navigationControls.className = 'mb-4 p-3 bg-light border rounded';
+
+        // Navigation heading and controls
+        const navHeader = document.createElement('div');
+        navHeader.className = 'd-flex justify-content-between align-items-center mb-2';
+
+        const navTitle = document.createElement('h5');
+        navTitle.className = 'mb-0';
+        navTitle.textContent = 'Date Navigation';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'btn btn-sm btn-outline-secondary';
+        toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i> Hide';
+        toggleBtn.id = 'toggleNavControls';
+        toggleBtn.addEventListener('click', function () {
+            const controlsContent = document.getElementById('dateNavContent');
+            controlsContent.classList.toggle('d-none');
+            this.innerHTML = controlsContent.classList.contains('d-none') ?
+                '<i class="bi bi-eye"></i> Show' :
+                '<i class="bi bi-eye-slash"></i> Hide';
+        });
+
+        navHeader.appendChild(navTitle);
+        navHeader.appendChild(toggleBtn);
+        navigationControls.appendChild(navHeader);
+
+        // Content container
+        const controlsContent = document.createElement('div');
+        controlsContent.id = 'dateNavContent';
+        controlsContent.className = 'd-flex justify-content-between align-items-center';
+
+        // Previous day button
+        const prevDayBtn = document.createElement('button');
+        prevDayBtn.className = 'btn btn-outline-primary';
+        prevDayBtn.innerHTML = '<i class="bi bi-arrow-left"></i> Previous Day';
+        prevDayBtn.addEventListener('click', function () {
+            currentDateOffset--;
+            loadTasks();
+            // Update notification badge based on the new date
+            updateNotificationBadge();
+        });
+
+        // Reset button
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn btn-primary';
+        resetBtn.textContent = 'Reset to Today';
+        resetBtn.addEventListener('click', function () {
+            currentDateOffset = 0;
+            loadTasks();
+            // Update notification badge based on the new date
+            updateNotificationBadge();
+        });
+
+        // Next day button
+        const nextDayBtn = document.createElement('button');
+        nextDayBtn.className = 'btn btn-outline-primary';
+        nextDayBtn.innerHTML = 'Next Day <i class="bi bi-arrow-right"></i>';
+        nextDayBtn.addEventListener('click', function () {
+            currentDateOffset++;
+            loadTasks();
+            // Update notification badge based on the new date
+            updateNotificationBadge();
+        });
+
+        // Current date display
+        const dateDisplay = document.createElement('div');
+        dateDisplay.id = 'currentDateDisplay';
+        dateDisplay.className = 'text-center mb-2 mt-2 fw-bold';
+
+        // Add elements to container
+        controlsContent.appendChild(prevDayBtn);
+        controlsContent.appendChild(resetBtn);
+        controlsContent.appendChild(nextDayBtn);
+
+        navigationControls.appendChild(dateDisplay);
+        navigationControls.appendChild(controlsContent);
+
+        // FIX: Use the dedicated container that already exists in the HTML
+        const dateNavigationContainer = document.querySelector('.date-navigation-container');
+        if (dateNavigationContainer) {
+            dateNavigationContainer.appendChild(navigationControls);
+        } else {
+            // Fallback if the container doesn't exist
+            const container = document.querySelector('.container');
+            if (container) {
+                // Insert before the task container views
+                const horizontalView = document.getElementById('horizontalView');
+                if (horizontalView) {
+                    container.insertBefore(navigationControls, horizontalView);
+                } else {
+                    // Last resort - just append to the container
+                    container.appendChild(navigationControls);
+                }
+            }
+        }
     }
 
     // Filter handlers
@@ -182,6 +325,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadTasks() {
         if (!currentUser) return;
 
+        // Create date navigation if it doesn't exist
+        createDateNavigation();
+
         const tasks = Storage.getUserTasks(currentUser.id);
         const categories = Storage.getUserCategories(currentUser.id);
 
@@ -196,32 +342,55 @@ document.addEventListener('DOMContentLoaded', function () {
             filteredTasks = filteredTasks.filter(task => task.categoryId === categoryFilter.value);
         }
 
+        // Update the date display
+        updateDateDisplay();
+
         // Group tasks by date for horizontal view
         if (taskDaysContainer) {
             taskDaysContainer.innerHTML = '';
 
-            // Get next 3 days
+            // Calculate dates based on currentDateOffset
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
 
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
 
-            const dayAfterTomorrow = new Date(today);
-            dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+            // Apply the offset to all dates
+            const baseDate = new Date(today);
+            baseDate.setDate(baseDate.getDate() + currentDateOffset);
+
+            const prevDay = new Date(baseDate);
+            prevDay.setDate(prevDay.getDate() - 1);
+
+            const nextDay = new Date(baseDate);
+            nextDay.setDate(nextDay.getDate() + 1);
 
             const days = [
-                { date: today, label: 'Today' },
-                { date: tomorrow, label: 'Tomorrow' },
-                { date: dayAfterTomorrow, label: new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(dayAfterTomorrow) }
+                { date: prevDay, label: 'Yesterday' },
+                { date: baseDate, label: 'Today' },
+                { date: nextDay, label: 'Tomorrow' }
             ];
 
+            // Adjust labels based on offset
+            if (currentDateOffset !== 0) {
+                days[0].label = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(prevDay);
+                days[1].label = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(baseDate);
+                days[2].label = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(nextDay);
+            }
+
             days.forEach(day => {
+                // FIXED: Better date comparison using ISO format for consistency
                 const dayTasks = filteredTasks.filter(task => {
                     if (!task.dueDate) return false;
-                    const taskDate = new Date(task.dueDate);
-                    taskDate.setHours(0, 0, 0, 0);
-                    return taskDate.getTime() === day.date.getTime();
+
+                    // Format date to YYYY-MM-DD for comparison
+                    const dayISO = day.date.toISOString().split('T')[0];
+                    // task.dueDate is already in YYYY-MM-DD format
+                    return task.dueDate === dayISO;
                 });
 
                 const dayColumn = document.createElement('div');
@@ -322,7 +491,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 filteredTasks.sort((a, b) => {
                     // Sort by due date first
                     if (a.dueDate && b.dueDate) {
-                        return new Date(a.dueDate) - new Date(b.dueDate);
+                        // Compare dates directly in ISO format (YYYY-MM-DD)
+                        return a.dueDate.localeCompare(b.dueDate);
                     }
                     if (a.dueDate) return -1;
                     if (b.dueDate) return 1;
@@ -388,11 +558,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     dueDate.className = 'ms-auto text-end';
 
                     if (task.dueDate) {
-                        const date = new Date(task.dueDate);
+                        // Convert ISO date to local date format ONLY for display
+                        const date = new Date(task.dueDate + 'T12:00:00Z');
                         dueDate.textContent = date.toLocaleDateString();
 
-                        // Highlight overdue tasks
-                        if (date < new Date() && task.status !== 'completed') {
+                        // Highlight overdue tasks - compare with today in UTC
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        if (date < today && task.status !== 'completed') {
                             dueDate.className += ' text-danger';
                         }
                     }
@@ -453,6 +627,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('editTaskCategory').value = task.categoryId;
 
             if (task.dueDate) {
+                // Set the date value directly (already in YYYY-MM-DD format)
                 document.getElementById('editTaskDueDate').value = task.dueDate;
             } else {
                 document.getElementById('editTaskDueDate').value = '';
@@ -481,17 +656,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const tasks = Storage.getUserTasks(currentUser.id);
 
-        // Count overdue tasks
+        // Calculate the reference date based on the current offset
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        const baseDate = new Date(today);
+        baseDate.setDate(baseDate.getDate() + currentDateOffset);
+
+        // Store the base date in ISO format (YYYY-MM-DD) for notifications page
+        const baseDateISO = baseDate.toISOString().split('T')[0];
+
+        // Store the current date offset in localStorage for notifications page
+        localStorage.setItem('currentDateOffset', currentDateOffset);
+
+        // Count overdue tasks relative to the selected date
         const overdueTasks = tasks.filter(task => {
             if (task.status === 'completed' || !task.dueDate) return false;
 
-            const dueDate = new Date(task.dueDate);
-            dueDate.setHours(0, 0, 0, 0);
-
-            return dueDate < today;
+            // Compare dates in ISO format (YYYY-MM-DD)
+            return task.dueDate < baseDateISO;
         });
 
         if (overdueTasks.length > 0) {

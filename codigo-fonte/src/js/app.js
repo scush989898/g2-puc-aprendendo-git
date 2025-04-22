@@ -1,4 +1,4 @@
 // Check if user is already logged in
 if (localStorage.getItem('currentUser')) {
-    window.location.href = 'pages/tasks.html';
+    window.location.href = 'src/pages/tasks.html';
 }
