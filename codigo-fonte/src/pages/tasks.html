@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks - OrganizAí</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/pages/tasks.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="tasks.html">OrganizAí</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto p-2">
+                    <li class="nav-item text-end">
+                        <a class="nav-link active" href="tasks.html">Tasks</a>
+                    </li>
+                    <li class="nav-item text-end">
+                        <a class="nav-link" href="profile.html">Profile</a>
+                    </li>
+                    <li class="nav-item text-end">
+                        <a class="nav-link" href="notifications.html">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge bg-danger notification-badge" id="notificationBadge"></span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>My Tasks</h2>
+            <div>
+                <button class="btn btn-outline-secondary me-2" id="toggleViewBtn">
+                    <i class="bi bi-list"></i> Toggle View
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="bi bi-plus"></i> Add Task
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">Filter:</span>
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">All Tasks</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <select class="form-select" id="categoryFilter">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horizontal View (Default) -->
+        <div id="horizontalView" class="task-container">
+            <div class="row" id="taskDays"></div>
+        </div>
+
+        <!-- Vertical View (Alternative) -->
+        <div id="verticalView" class="task-container d-none">
+            <div class="list-group" id="taskList"></div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTaskForm">
+                        <div class="mb-3">
+                            <label for="taskTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="taskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskCategory" class="form-label">Category</label>
+                            <div class="input-group">
+                                <select class="form-select" id="taskCategory">
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#addCategoryModal">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskDueDate" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="taskDueDate">
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="taskNotes" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="taskRepeat">
+                            <label class="form-check-label" for="taskRepeat">Repeat Task</label>
+                        </div>
+                        <div id="repeatOptions" class="mb-3 d-none">
+                            <select class="form-select" id="repeatFrequency">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTaskBtn">Save Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="categoryName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoryColor" class="form-label">Color</label>
+                        <input type="color" class="form-control" id="categoryColor" value="#0d6efd">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTaskForm">
+                        <input type="hidden" id="editTaskId">
+                        <div class="mb-3">
+                            <label for="editTaskTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="editTaskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editTaskDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskCategory" class="form-label">Category</label>
+                            <select class="form-select" id="editTaskCategory">
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskDueDate" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="editTaskDueDate">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="editTaskNotes" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskStatus" class="form-label">Status</label>
+                            <select class="form-select" id="editTaskStatus">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="editTaskRepeat">
+                            <label class="form-check-label" for="editTaskRepeat">Repeat Task</label>
+                        </div>
+                        <div id="editRepeatOptions" class="mb-3 d-none">
+                            <select class="form-select" id="editRepeatFrequency">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger me-auto" id="deleteTaskBtn">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateTaskBtn">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/pages/tasks.js"></script>
+    <script src="../js/storage/storage.js"></script>
+    <script src="../js/auth/auth.js"></script>
+    <script src="../js/services/categories.js"></script>
+    <script src="../js/services/tasks.js"></script>
+</body>
+
+</html>

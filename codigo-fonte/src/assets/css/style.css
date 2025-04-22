@@ -1,0 +1,40 @@
+/* General styles */
+body {
+    background-color: #f8f9fa;
+}
+
+/* Task item styles */
+.task-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.task-item:hover {
+    background-color: #f8f9fa;
+}
+
+.task-completed {
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+.task-inactive {
+    opacity: 0.5;
+    border-style: dashed !important;
+}
+
+/* Notification badge */
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+}
+
+/* Mobile optimizations */
+@media (max-width: 767.98px) {
+    .task-container {
+        margin-bottom: 70px;
+        /* Space for bottom navigation on mobile */
+    }
+}
