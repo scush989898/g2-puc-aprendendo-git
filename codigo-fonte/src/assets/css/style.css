@@ -132,12 +132,6 @@ body {
     border-left-color: var(--accent-color);
 }
 
-.task-inactive {
-    opacity: 0.5;
-    border-style: dashed !important;
-    border-left-color: var(--secondary-color);
-}
-
 /* Forms */
 .form-control:focus,
 .form-select:focus {

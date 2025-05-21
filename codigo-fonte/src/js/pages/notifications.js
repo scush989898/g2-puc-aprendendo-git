@@ -1,298 +1,124 @@
 // notifications.js
 
-document.addEventListener('DOMContentLoaded', function () {
+function initNotifications() {
     const currentUser = Storage.getCurrentUser();
-    if (!currentUser) {
-        window.location.href = 'login.html';
+    if (!currentUser) return;
+
+    loadNotifications();
+    setupCloseButtons();
+
+}
+
+/**
+ * RF-11: Carrega e exibe notificações
+ */
+function loadNotifications() {
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    const notifications = Storage.getUserNotifications(currentUser.id);
+
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('notificationsList');
+    if (!container) return;
+
+    if (notifications.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> Você não tem notificações.
+            </div>
+        `;
         return;
     }
 
-    const notificationsList = document.getElementById('notificationsList');
-    const notificationBadge = document.getElementById('notificationBadge');
+    let notificationsHtml = '';
 
-    // Load notifications (overdue tasks and upcoming tasks)
-    function loadNotifications() {
-        const tasks = Storage.getUserTasks(currentUser.id);
-        const categories = Storage.getUserCategories(currentUser.id);
+    notifications.forEach(notification => {
+        const createdAt = new Date(notification.createdAt);
+        const brazilDate = new Date(createdAt.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+        brazilDate.setHours(12, 0, 0, 0); // Padronizar para meio-dia
 
-        notificationsList.innerHTML = '';
+        const date = brazilDate.toLocaleDateString('pt-BR');
 
-        // Get current date offset from localStorage (set by tasks page)
-        const currentDateOffset = parseInt(localStorage.getItem('currentDateOffset') || '0');
+        const readClass = notification.read ? 'notification-read' : '';
 
-        // Today's date for comparison
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        notificationsHtml += `
+            <div class="alert alert-${notification.type} alert-dismissible fade show ${readClass}" 
+                role="alert" 
+                data-notification-id="${notification.id}">
+                <i class="bi bi-${getIconForType(notification.type)} me-2"></i>
+                <strong>${notification.title}:</strong> ${notification.message}
+                <div class="small text-muted">Recebida em: ${date}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        `;
+    });
 
-        // Apply the offset to the base date
-        const baseDate = new Date(today);
-        baseDate.setDate(baseDate.getDate() + currentDateOffset);
-
-        const yesterday = new Date(baseDate);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const tomorrow = new Date(baseDate);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        // Convert dates to ISO format (YYYY-MM-DD) for consistent comparison
-        const baseDateISO = baseDate.toISOString().split('T')[0];
-        const yesterdayISO = yesterday.toISOString().split('T')[0];
-        const tomorrowISO = tomorrow.toISOString().split('T')[0];
-
-        // Get overdue tasks relative to the selected date
-        const overdueTasks = tasks.filter(task => {
-            if (task.status === 'completed' || !task.dueDate) return false;
-
-            // Compare dates in ISO format
-            return task.dueDate < baseDateISO;
-        });
-
-        // Get tasks due on the selected "today"
-        const todayTasks = tasks.filter(task => {
-            if (task.status === 'completed' || !task.dueDate) return false;
-
-            // Compare dates in ISO format
-            return task.dueDate === baseDateISO;
-        });
-
-        // Get tasks due on the selected "tomorrow"
-        const tomorrowTasks = tasks.filter(task => {
-            if (task.status === 'completed' || !task.dueDate) return false;
-
-            // Compare dates in ISO format
-            return task.dueDate === tomorrowISO;
-        });
-
-        // Get tasks from the selected "yesterday"
-        const yesterdayTasks = tasks.filter(task => {
-            if (task.status === 'completed' || !task.dueDate) return false;
-
-            // Compare dates in ISO format
-            return task.dueDate === yesterdayISO;
-        });
-
-        // Update notification badge
-        const totalNotifications = overdueTasks.length;
-        if (totalNotifications > 0) {
-            notificationBadge.textContent = totalNotifications;
-            notificationBadge.classList.remove('d-none');
-        } else {
-            notificationBadge.classList.add('d-none');
-        }
-
-        // Get the date labels based on offset
-        let yesterdayLabel = 'Yesterday';
-        let todayLabel = 'Today';
-        let tomorrowLabel = 'Tomorrow';
-
-        if (currentDateOffset !== 0) {
-            yesterdayLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(yesterday);
-            todayLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(baseDate);
-            tomorrowLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(tomorrow);
-        }
-
-        // Add reference date information if we're not viewing the actual today
-        if (currentDateOffset !== 0) {
-            const referenceInfo = document.createElement('div');
-            referenceInfo.className = 'alert alert-info';
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            // Convert to local date format ONLY for display
-            referenceInfo.innerHTML = `<strong>Note:</strong> You are viewing notifications for <strong>${baseDate.toLocaleDateString('en-US', options)}</strong> (${currentDateOffset > 0 ? currentDateOffset + ' days ahead' : Math.abs(currentDateOffset) + ' days ago'})`;
-            notificationsList.appendChild(referenceInfo);
-        }
-
-        // Display overdue tasks
-        if (overdueTasks.length > 0) {
-            const overdueHeader = document.createElement('h5');
-            overdueHeader.className = 'text-danger mt-3';
-            overdueHeader.textContent = 'Overdue Tasks';
-            notificationsList.appendChild(overdueHeader);
-
-            overdueTasks.forEach(task => {
-                const category = categories.find(c => c.id === task.categoryId);
-
-                const notificationItem = document.createElement('a');
-                notificationItem.href = 'tasks.html';
-                notificationItem.className = 'list-group-item list-group-item-action list-group-item-danger';
-
-                const taskTitle = document.createElement('div');
-                taskTitle.className = 'd-flex justify-content-between align-items-center';
-
-                const title = document.createElement('h6');
-                title.className = 'mb-0';
-                title.textContent = task.title;
-
-                const dueDate = document.createElement('small');
-                // Convert to local date format ONLY for display
-                const displayDate = new Date(task.dueDate + 'T12:00:00Z');
-                dueDate.textContent = `Due: ${displayDate.toLocaleDateString()}`;
-
-                taskTitle.appendChild(title);
-                taskTitle.appendChild(dueDate);
-
-                const description = document.createElement('p');
-                description.className = 'mb-0 small';
-                description.textContent = task.description || 'No description';
-
-                const categoryBadge = document.createElement('small');
-                categoryBadge.className = 'd-block mt-1';
-                categoryBadge.textContent = category ? `Category: ${category.name}` : '';
-
-                notificationItem.appendChild(taskTitle);
-                notificationItem.appendChild(description);
-                notificationItem.appendChild(categoryBadge);
-
-                notificationsList.appendChild(notificationItem);
-            });
-        }
-
-        // Display yesterday's tasks
-        if (yesterdayTasks.length > 0) {
-            const yesterdayHeader = document.createElement('h5');
-            yesterdayHeader.className = 'text-warning mt-3';
-            yesterdayHeader.textContent = `${yesterdayLabel}'s Tasks`;
-            notificationsList.appendChild(yesterdayHeader);
-
-            yesterdayTasks.forEach(task => {
-                const category = categories.find(c => c.id === task.categoryId);
-
-                const notificationItem = document.createElement('a');
-                notificationItem.href = 'tasks.html';
-                notificationItem.className = 'list-group-item list-group-item-action list-group-item-warning';
-
-                const taskTitle = document.createElement('div');
-                taskTitle.className = 'd-flex justify-content-between align-items-center';
-
-                const title = document.createElement('h6');
-                title.className = 'mb-0';
-                title.textContent = task.title;
-
-                taskTitle.appendChild(title);
-
-                const description = document.createElement('p');
-                description.className = 'mb-0 small';
-                description.textContent = task.description || 'No description';
-
-                const categoryBadge = document.createElement('small');
-                categoryBadge.className = 'd-block mt-1';
-                categoryBadge.textContent = category ? `Category: ${category.name}` : '';
-
-                notificationItem.appendChild(taskTitle);
-                notificationItem.appendChild(description);
-                notificationItem.appendChild(categoryBadge);
-
-                notificationsList.appendChild(notificationItem);
-            });
-        }
-
-        // Display today's tasks
-        if (todayTasks.length > 0) {
-            const todayHeader = document.createElement('h5');
-            todayHeader.className = 'text-primary mt-3';
-            todayHeader.textContent = `Due ${todayLabel}`;
-            notificationsList.appendChild(todayHeader);
-
-            todayTasks.forEach(task => {
-                const category = categories.find(c => c.id === task.categoryId);
-
-                const notificationItem = document.createElement('a');
-                notificationItem.href = 'tasks.html';
-                notificationItem.className = 'list-group-item list-group-item-action list-group-item-primary';
-
-                const taskTitle = document.createElement('div');
-                taskTitle.className = 'd-flex justify-content-between align-items-center';
-
-                const title = document.createElement('h6');
-                title.className = 'mb-0';
-                title.textContent = task.title;
-
-                taskTitle.appendChild(title);
-
-                const description = document.createElement('p');
-                description.className = 'mb-0 small';
-                description.textContent = task.description || 'No description';
-
-                const categoryBadge = document.createElement('small');
-                categoryBadge.className = 'd-block mt-1';
-                categoryBadge.textContent = category ? `Category: ${category.name}` : '';
-
-                notificationItem.appendChild(taskTitle);
-                notificationItem.appendChild(description);
-                notificationItem.appendChild(categoryBadge);
-
-                notificationsList.appendChild(notificationItem);
-            });
-        }
-
-        // Display tomorrow's tasks
-        if (tomorrowTasks.length > 0) {
-            const tomorrowHeader = document.createElement('h5');
-            tomorrowHeader.className = 'text-info mt-3';
-            tomorrowHeader.textContent = `Due ${tomorrowLabel}`;
-            notificationsList.appendChild(tomorrowHeader);
-
-            tomorrowTasks.forEach(task => {
-                const category = categories.find(c => c.id === task.categoryId);
-
-                const notificationItem = document.createElement('a');
-                notificationItem.href = 'tasks.html';
-                notificationItem.className = 'list-group-item list-group-item-action list-group-item-info';
-
-                const taskTitle = document.createElement('div');
-                taskTitle.className = 'd-flex justify-content-between align-items-center';
-
-                const title = document.createElement('h6');
-                title.className = 'mb-0';
-                title.textContent = task.title;
-
-                taskTitle.appendChild(title);
-
-                const description = document.createElement('p');
-                description.className = 'mb-0 small';
-                description.textContent = task.description || 'No description';
-
-                const categoryBadge = document.createElement('small');
-                categoryBadge.className = 'd-block mt-1';
-                categoryBadge.textContent = category ? `Category: ${category.name}` : '';
-
-                notificationItem.appendChild(taskTitle);
-                notificationItem.appendChild(description);
-                notificationItem.appendChild(categoryBadge);
-
-                notificationsList.appendChild(notificationItem);
-            });
-        }
-
-        // If no notifications
-        if (overdueTasks.length === 0 && todayTasks.length === 0 && tomorrowTasks.length === 0 && yesterdayTasks.length === 0) {
-            const noNotifications = document.createElement('div');
-            noNotifications.className = 'alert alert-success';
-            noNotifications.textContent = 'You have no pending notifications!';
-            notificationsList.appendChild(noNotifications);
-        }
+    if (!document.getElementById('notification-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'notification-styles';
+        styleElement.textContent = `
+            .notification-read {
+                opacity: 0.7;
+            }
+        `;
+        document.head.appendChild(styleElement);
     }
 
-    // Initialize notifications
-    loadNotifications();
+    container.innerHTML = notificationsHtml;
+}
 
-    // Add a date navigation control if we're on the notifications page
-    if (window.location.pathname.indexOf('/notifications.html') > -1) {
-        // Create a button to return to the current day view
-        const resetDateView = document.createElement('button');
-        resetDateView.className = 'btn btn-outline-primary mt-3';
-        resetDateView.textContent = 'Reset to Today';
-        resetDateView.addEventListener('click', function () {
-            localStorage.setItem('currentDateOffset', '0');
-            loadNotifications();
-        });
+function getIconForType(type) {
+    switch (type) {
+        case 'success': return 'check2-circle';
+        case 'warning': return 'exclamation-triangle';
+        case 'danger': return 'x-octagon';
+        case 'info':
+        default: return 'info-circle';
+    }
+}
 
-        // Only show the reset button if we're not already on the current day
-        const currentDateOffset = parseInt(localStorage.getItem('currentDateOffset') || '0');
-        if (currentDateOffset !== 0) {
-            const container = document.querySelector('.container');
-            if (container && notificationsList) {
-                container.insertBefore(resetDateView, notificationsList);
+/**
+ * RF-11: Configura botões para fechar notificações
+ */
+function setupCloseButtons() {
+    document.body.addEventListener('close.bs.alert', function (event) {
+        const alert = event.target;
+        if (alert && alert.dataset.notificationId) {
+            const notificationId = alert.dataset.notificationId;
+            markNotificationAsRead(notificationId);
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('btn-close') &&
+            event.target.closest('.alert')) {
+            const alert = event.target.closest('.alert');
+            const notificationId = alert.dataset.notificationId;
+            if (notificationId) {
+                markNotificationAsRead(notificationId);
             }
         }
+    });
+}
+
+/**
+ * RF-11: Marca uma notificação como lida
+ */
+function markNotificationAsRead(notificationId) {
+    if (!notificationId) return;
+
+    const notifications = Storage.getNotifications();
+    const index = notifications.findIndex(notice => notice.id === notificationId);
+
+    if (index >= 0) {
+        notifications[index].read = true;
+        Storage.saveNotifications(notifications);
+
     }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    initNotifications();
 });

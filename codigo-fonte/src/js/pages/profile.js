@@ -1,70 +1,85 @@
 // profile.js
+import { standardizeDate } from '../utils/date.js'
 
-document.addEventListener('DOMContentLoaded', function () {
+function initProfile() {
     const currentUser = Storage.getCurrentUser();
-    if (!currentUser) {
-        window.location.href = 'login.html';
+    if (!currentUser) return;
+
+    loadUserData();
+    setupProfileForm();
+}
+
+function loadUserData() {
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    document.getElementById('profileName').value = currentUser.name || '';
+    document.getElementById('profileEmail').value = currentUser.email || '';
+    document.getElementById('profilePhone').value = currentUser.phone || '';
+
+    const preferences = Storage.getUserPreferences(currentUser.id);
+    if (preferences.emailNotifications) {
+        document.getElementById('emailNotifications').checked = true;
+    }
+}
+
+function setupProfileForm() {
+    const profileForm = document.getElementById('profileForm');
+
+    if (profileForm) {
+        profileForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            saveUserProfile();
+        });
+    }
+}
+
+/**
+ * RF-16: Salva o perfil do usuário
+ * RF-19: Salvar preferências para envio de email
+ */
+function saveUserProfile() {
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    const name = document.getElementById('profileName').value.trim();
+    const email = document.getElementById('profileEmail').value.trim();
+    const phone = document.getElementById('profilePhone').value.trim();
+    const emailNotifications = document.getElementById('emailNotifications').checked;
+
+    if (!name) {
+        alert('Por favor, informe seu nome.');
         return;
     }
 
-    // Fill profile form
-    document.getElementById('profileName').value = currentUser.name;
-    document.getElementById('profileEmail').value = currentUser.email;
-
-    // Convert ISO date to local date format ONLY for display
-    const createdDate = new Date(currentUser.createdAt);
-    document.getElementById('createdAt').value = createdDate.toLocaleDateString();
-
-    // Handle form submission
-    document.getElementById('profileForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const name = document.getElementById('profileName').value;
-
-        if (!name) {
-            alert('Name is required');
-            return;
-        }
-
-        // Update user
-        const users = Storage.getUsers();
-        const userIndex = users.findIndex(u => u.id === currentUser.id);
-
-        if (userIndex !== -1) {
-            users[userIndex].name = name;
-            Storage.saveUsers(users);
-
-            // Update current user
-            currentUser.name = name;
-            Storage.setCurrentUser(currentUser);
-
-            alert('Profile updated successfully');
-        }
-    });
-
-    // Update notification badge
-    const badge = document.getElementById('notificationBadge');
-    if (badge) {
-        const tasks = Storage.getUserTasks(currentUser.id);
-
-        // Get today's date in UTC
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Count overdue tasks
-        const overdueTasks = tasks.filter(task => {
-            if (task.status === 'completed' || !task.dueDate) return false;
-
-            // Parse the ISO date string directly
-            const dueDate = new Date(task.dueDate + 'T12:00:00Z');
-            return dueDate < today;
-        });
-
-        if (overdueTasks.length > 0) {
-            badge.textContent = overdueTasks.length;
-            badge.classList.remove('d-none');
-        } else {
-            badge.classList.add('d-none');
-        }
+    if (!email) {
+        alert('Por favor, informe seu email.');
+        return;
     }
-});
+
+    const users = Storage.getUsers();
+    const userIndex = users.findIndex(user => user.id === currentUser.id);
+
+    if (userIndex >= 0) {
+        users[userIndex].name = name;
+        users[userIndex].email = email;
+        users[userIndex].phone = phone;
+        users[userIndex].updatedAt = standardizeDate();
+
+        Storage.saveUsers(users);
+
+        const userWithoutPassword = { ...users[userIndex] };
+        delete userWithoutPassword.password;
+
+        Storage.setCurrentUser(userWithoutPassword);
+
+        const preferences = {
+            emailNotifications
+        };
+
+        Storage.saveUserPreferences(currentUser.id, preferences);
+        alert('Perfil atualizado com sucesso!');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initProfile);

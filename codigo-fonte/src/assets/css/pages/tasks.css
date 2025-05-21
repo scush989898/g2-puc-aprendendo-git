@@ -1,175 +1,114 @@
-/* tasks.css */
+/* tasks..css */
+/* Edição da modal de adição */
 
-/* Navegação de datas */
-.date-navigation-container {
-    background-color: var(--light-color);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid var(--accent-color);
+/* Adaptação das cores e remoção das bordas */
+.modal-body {
+  background-color: #F1F1F1;
 }
 
-.date-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.modal-header {
+  background-color: #F1F1F1;
+  border: none;
 }
 
-.date-nav-btn {
-    color: var(--secondary-color);
-    background: transparent;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
+.modal-footer {
+  background-color: #F1F1F1;
+  border: none;
 }
 
-.date-nav-btn:hover {
-    color: var(--primary-color);
+.modal-content {
+  border-radius: 20px !important;
+  overflow: hidden;
 }
 
-.current-date {
-    font-weight: 700;
-    color: var(--primary-color);
-    font-size: 1.2rem;
+/* Inputs e textareas */
+.form-control {
+  border-radius: 10px;
 }
 
-/* Cards de dia */
-.day-card {
-    background-color: var(--light-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 1px solid var(--accent-color);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+#editTaskModal select {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 
-.day-header {
-    padding: 10px;
-    background-color: var(--accent-color);
-    color: var(--light-text);
-    border-radius: 6px;
-    margin-bottom: 10px;
-    font-weight: 600;
+#addTaskModal select {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 
-.day-empty {
-    text-align: center;
-    padding: 20px;
-    color: #777;
-    font-style: italic;
+.category-circle {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  vertical-align: middle;
 }
 
-/* Task items */
-.task-item {
-    padding: 12px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    background-color: white;
-    border-left: 4px solid var(--primary-color);
-    transition: all 0.2s ease;
+.form-control-color-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  margin-left: 8px;
 }
 
-.task-item:hover {
-    background-color: rgba(255, 127, 62, 0.1);
-    transform: translateY(-2px);
+.form-control-color-circle::-webkit-color-swatch {
+  border-radius: 50%;
+  border: none;
 }
 
-.task-item .task-title {
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: var(--secondary-color);
+.form-control-color-circle::-moz-color-swatch {
+  border-radius: 50%;
+  border: none;
 }
 
-.task-item .task-description {
-    font-size: 0.9rem;
-    color: #555;
-    margin-bottom: 8px;
+.categories-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 190px;
+  overflow-y: auto;
 }
 
-.task-item .task-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.8rem;
-    color: #777;
+.categories-list li {
+  padding: .4rem 0 .4rem .4rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
 }
 
-.task-category-badge {
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.categories-list li:last-child {
+  border-bottom: none;
 }
 
-/* Status styles */
-.task-completed {
-    opacity: 0.7;
-    text-decoration: line-through;
-    border-left-color: var(--accent-color);
+.modal-content {
+  border-radius: 16px;
 }
 
-.task-inactive {
-    opacity: 0.5;
-    border-style: dashed !important;
-    border-left-color: var(--secondary-color);
+@media (max-width: 425px) {
+  .modal-dialog {
+    margin: 1rem auto;
+  }
+
+  .categories-list li {
+    font-size: .95rem;
+  }
 }
 
-/* Visualizações */
-.toggle-view-btn {
-    color: var(--secondary-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
+#btnCriarCategoria {
+  background-color: #4335A7 !important;
+  border: none !important;
+  color: #fff !important;
 }
 
-.toggle-view-btn:hover {
-    color: var(--primary-color);
-}
-
-/* Vertical view */
-#verticalView .task-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#verticalView .task-content {
-    flex: 1;
-}
-
-#verticalView .task-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.task-date-header {
-    color: var(--secondary-color);
-    font-weight: 700;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 5px;
-    margin: 15px 0;
-}
-
-/* Mobile overrides */
-@media (max-width: 767.98px) {
-    .day-card {
-        margin-bottom: 15px;
-    }
-
-    .task-item {
-        padding: 10px;
-    }
-
-    .day-header {
-        font-size: 1rem;
-    }
-
-    .task-container {
-        margin-bottom: 70px;
-        /* Space for bottom navigation on mobile */
-    }
-
-    .date-navigation .current-date {
-        font-size: 1rem;
-    }
+#btnCriarCategoria:hover,
+#btnCriarCategoria:focus {
+  background-color: #322571 !important;
+  color: #fff !important;
 }
