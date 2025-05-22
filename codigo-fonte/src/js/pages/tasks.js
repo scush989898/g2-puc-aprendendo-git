@@ -95,6 +95,18 @@ function setupModalListeners() {
     });
 }
 
+function ensureModalIsClosed(modalId) {
+    const backdrops = document.getElementsByClassName('modal-backdrop');
+    while (backdrops.length > 0) {
+        backdrops[0].parentNode.removeChild(backdrops[0]);
+    }
+
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+}
+
+
 function setupFormHandlers() {
     const addTaskForm = document.getElementById('addTaskForm');
     const saveTaskBtn = document.getElementById('saveTaskBtn');
@@ -164,59 +176,6 @@ function isHoliday(date) {
     return holidaysData.find(holiday => holiday.date === formattedDate) || null;
 }
 
-
-
-/**
- * RF-06: Configurar categorias nas dropdowns
- */
-function loadCategories() {
-    const currentUser = Storage.getCurrentUser();
-    if (!currentUser) return;
-
-    const categories = Storage.getUserCategories(currentUser.id);
-
-    const categoryDropdowns = document.querySelectorAll('#taskCategory, #editTaskCategory');
-    const categoryFilter = document.getElementById('categoryFilter');
-
-    const populateDropdown = (dropdown) => {
-        if (!dropdown) return;
-
-        dropdown.innerHTML = dropdown.id === 'categoryFilter'
-            ? '<option value="all">Todas as Categorias</option>'
-            : '';
-
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.name;
-            option.style.color = category.color;
-            dropdown.appendChild(option);
-        });
-    };
-
-    categoryDropdowns.forEach(populateDropdown);
-    if (categoryFilter) populateDropdown(categoryFilter);
-
-    renderCategoriesList();
-}
-
-function renderCategoriesList() {
-    const categoriesList = document.getElementById('categoriesList');
-    if (!categoriesList) return;
-
-    const currentUser = Storage.getCurrentUser();
-    if (!currentUser) return;
-
-    const categories = Storage.getUserCategories(currentUser.id);
-
-    categoriesList.innerHTML = '';
-    categories.forEach(cat => {
-        const li = document.createElement('li');
-        li.innerHTML = `<span class="category-circle" style="background:${cat.color};"></span>${cat.name}`;
-        categoriesList.appendChild(li);
-    });
-}
-
 /**
  * RF-01: Criar nova tarefa
  */
@@ -271,17 +230,6 @@ function createTask() {
 
         ensureModalIsClosed('addTaskModal');
     }
-}
-
-function ensureModalIsClosed(modalId) {
-    const backdrops = document.getElementsByClassName('modal-backdrop');
-    while (backdrops.length > 0) {
-        backdrops[0].parentNode.removeChild(backdrops[0]);
-    }
-
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
 }
 
 /**
@@ -371,6 +319,148 @@ function deleteTask() {
             ensureModalIsClosed('editTaskModal');
         }
     }
+}
+
+/**
+ * RF-09: Cria uma notificação
+ */
+function createNotification(notification) {
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    const notifications = Storage.getNotifications();
+
+    const newNotification = {
+        id: Storage.generateId(),
+        userId: currentUser.id,
+        type: notification.type || 'info', // info, success, warning, danger
+        title: notification.title || 'Notificação',
+        message: notification.message || '',
+        relatedTo: notification.relatedTo || null,
+        read: false,
+        createdAt: standardizeDate()
+    };
+
+    notifications.push(newNotification);
+    Storage.saveNotifications(notifications);
+
+}
+
+/**
+ * RF-02: Carregar e exibir tarefas
+ */
+function loadTasks() {
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+    const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
+
+    let tasks = Storage.getUserTasks(currentUser.id);
+
+    if (statusFilter !== 'all') {
+        tasks = tasks.filter(task => task.status === statusFilter);
+    }
+
+    if (categoryFilter !== 'all') {
+        tasks = tasks.filter(task => task.categoryId === categoryFilter);
+    }
+
+    const selectedDate = new Date();
+    selectedDate.setDate(selectedDate.getDate() + currentDateOffset);
+
+    const brazilSelectedDate = new Date(selectedDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    brazilSelectedDate.setHours(12, 0, 0, 0);
+
+    const yesterday = new Date(brazilSelectedDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(12, 0, 0, 0);
+
+    const tomorrow = new Date(brazilSelectedDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(12, 0, 0, 0);
+
+    const tasksByDay = {
+        yesterday: [],
+        today: [],
+        tomorrow: []
+    };
+
+    tasks.forEach(task => {
+        if (!task.dueDate) {
+            tasksByDay.today.push(task);
+            return;
+        }
+
+        const dueDate = new Date(task.dueDate);
+        const brazilDueDate = new Date(dueDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+        brazilDueDate.setHours(12, 0, 0, 0);
+
+        if (isSameDay(brazilDueDate, yesterday)) {
+            tasksByDay.yesterday.push(task);
+        } else if (isSameDay(brazilDueDate, brazilSelectedDate)) {
+            tasksByDay.today.push(task);
+        } else if (isSameDay(brazilDueDate, tomorrow)) {
+            tasksByDay.tomorrow.push(task);
+        }
+    });
+
+    renderHorizontalView(tasksByDay, brazilSelectedDate, yesterday, tomorrow);
+    renderVerticalView(tasks);
+
+    setupTaskCheckboxes();
+    setupTaskItemClickHandlers();
+}
+
+/**
+ * RF-06: Configurar categorias nas dropdowns
+ */
+function loadCategories() {
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    const categories = Storage.getUserCategories(currentUser.id);
+
+    const categoryDropdowns = document.querySelectorAll('#taskCategory, #editTaskCategory');
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    const populateDropdown = (dropdown) => {
+        if (!dropdown) return;
+
+        dropdown.innerHTML = dropdown.id === 'categoryFilter'
+            ? '<option value="all">Todas as Categorias</option>'
+            : '';
+
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            option.style.color = category.color;
+            dropdown.appendChild(option);
+        });
+    };
+
+    categoryDropdowns.forEach(populateDropdown);
+    if (categoryFilter) populateDropdown(categoryFilter);
+
+    renderCategoriesList();
+}
+
+function renderCategoriesList() {
+    const categoriesList = document.getElementById('categoriesList');
+    if (!categoriesList) return;
+
+    const currentUser = Storage.getCurrentUser();
+    if (!currentUser) return;
+
+    const categories = Storage.getUserCategories(currentUser.id);
+
+    categoriesList.innerHTML = '';
+    categories.forEach(cat => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="category-circle" style="background:${cat.color};"></span>${cat.name}`;
+        categoriesList.appendChild(li);
+    });
 }
 
 /**
@@ -589,72 +679,6 @@ function toggleTaskView() {
         currentViewIsHorizontal ? 'horizontal' : 'vertical');
 }
 
-/**
- * RF-02: Carregar e exibir tarefas
- */
-function loadTasks() {
-    const currentUser = Storage.getCurrentUser();
-    if (!currentUser) return;
-
-    const statusFilter = document.getElementById('statusFilter')?.value || 'all';
-    const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
-
-    let tasks = Storage.getUserTasks(currentUser.id);
-
-    if (statusFilter !== 'all') {
-        tasks = tasks.filter(task => task.status === statusFilter);
-    }
-
-    if (categoryFilter !== 'all') {
-        tasks = tasks.filter(task => task.categoryId === categoryFilter);
-    }
-
-    const selectedDate = new Date();
-    selectedDate.setDate(selectedDate.getDate() + currentDateOffset);
-
-    const brazilSelectedDate = new Date(selectedDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    brazilSelectedDate.setHours(12, 0, 0, 0);
-
-    const yesterday = new Date(brazilSelectedDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(12, 0, 0, 0);
-
-    const tomorrow = new Date(brazilSelectedDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(12, 0, 0, 0);
-
-    const tasksByDay = {
-        yesterday: [],
-        today: [],
-        tomorrow: []
-    };
-
-    tasks.forEach(task => {
-        if (!task.dueDate) {
-            tasksByDay.today.push(task);
-            return;
-        }
-
-        const dueDate = new Date(task.dueDate);
-        const brazilDueDate = new Date(dueDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-        brazilDueDate.setHours(12, 0, 0, 0);
-
-        if (isSameDay(brazilDueDate, yesterday)) {
-            tasksByDay.yesterday.push(task);
-        } else if (isSameDay(brazilDueDate, brazilSelectedDate)) {
-            tasksByDay.today.push(task);
-        } else if (isSameDay(brazilDueDate, tomorrow)) {
-            tasksByDay.tomorrow.push(task);
-        }
-    });
-
-    renderHorizontalView(tasksByDay, brazilSelectedDate, yesterday, tomorrow);
-    renderVerticalView(tasks);
-
-    setupTaskCheckboxes();
-    setupTaskItemClickHandlers();
-}
-
 function isSameDay(date1, date2) {
     return date1.getFullYear() === date2.getFullYear() &&
         date1.getMonth() === date2.getMonth() &&
@@ -868,6 +892,9 @@ function setupTaskCheckboxes() {
     });
 }
 
+
+// comportamento diferente das outras modais normais
+//  pois precisa carregar dados do localstorage antes de abrir
 function openEditTaskModal(taskId) {
     const task = getTaskById(taskId);
     if (!task) return;
@@ -907,6 +934,8 @@ function openEditTaskModal(taskId) {
     modal.show();
 }
 
+
+
 function getTaskById(taskId) {
     const tasks = Storage.getTasks();
     return tasks.find(task => task.id === taskId) || null;
@@ -915,31 +944,6 @@ function getTaskById(taskId) {
 function getCategoryById(categoryId) {
     const categories = Storage.getCategories();
     return categories.find(category => category.id === categoryId) || null;
-}
-
-/**
- * RF-09: Cria uma notificação
- */
-function createNotification(notification) {
-    const currentUser = Storage.getCurrentUser();
-    if (!currentUser) return;
-
-    const notifications = Storage.getNotifications();
-
-    const newNotification = {
-        id: Storage.generateId(),
-        userId: currentUser.id,
-        type: notification.type || 'info', // info, success, warning, danger
-        title: notification.title || 'Notificação',
-        message: notification.message || '',
-        relatedTo: notification.relatedTo || null,
-        read: false,
-        createdAt: standardizeDate()
-    };
-
-    notifications.push(newNotification);
-    Storage.saveNotifications(notifications);
-
 }
 
 
